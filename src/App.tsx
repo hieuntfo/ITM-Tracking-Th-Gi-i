@@ -24,13 +24,24 @@ const COLORS = {
 };
 
 
-function InfoTooltip({ content }: { content: string }) {
+function InfoTooltip({ content, align = 'center' }: { content: string, align?: 'left' | 'center' | 'right' }) {
+  let positionClasses = 'left-1/2 -translate-x-1/2';
+  let arrowClasses = 'left-1/2 -translate-x-1/2';
+  
+  if (align === 'right') {
+    positionClasses = 'right-[-4px] md:right-[-8px]';
+    arrowClasses = 'right-4';
+  } else if (align === 'left') {
+    positionClasses = 'left-[-4px] md:left-[-8px]';
+    arrowClasses = 'left-4';
+  }
+
   return (
     <div className="group relative z-[9999] inline-flex items-center justify-center">
       <Info className="w-4 h-4 text-slate-400 hover:text-white cursor-help transition-colors" />
-      <div className="absolute top-[calc(100%+8px)] left-1/2 -translate-x-1/2 px-3 py-2 bg-slate-800 text-slate-200 text-xs leading-relaxed rounded-lg shadow-xl border border-white/10 w-64 md:w-72 opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-[9999] font-normal text-left">
+      <div className={`absolute top-[calc(100%+8px)] ${positionClasses} px-3 py-2 bg-slate-800 text-slate-200 text-xs leading-relaxed rounded-lg shadow-xl border border-white/10 w-48 sm:w-64 md:w-72 opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-[9999] font-normal text-left`}>
         {content}
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-slate-800"></div>
+        <div className={`absolute bottom-full ${arrowClasses} border-4 border-transparent border-b-slate-800`}></div>
       </div>
     </div>
   );
@@ -426,7 +437,7 @@ export default function App() {
           </section>
 
           {/* Allocation Pie Chart */}
-          <section className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-6 flex flex-col z-10">
+          <section className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-6 flex flex-col z-10 hover:z-50 transition-all">
             <div>
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
                 Tỷ trọng nền tảng
@@ -476,7 +487,7 @@ export default function App() {
         </div>
 
         {/* Comparison Chart */}
-        <section className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-6 flex flex-col relative z-20">
+        <section className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-6 flex flex-col relative z-20 hover:z-50 transition-all">
           <div className="flex justify-between items-start mb-6 gap-4">
             <div>
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
@@ -509,7 +520,7 @@ export default function App() {
         </section>
 
         {/* Recent Data Table */}
-        <section className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl">
+        <section className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl hover:z-50 relative transition-all">
           <div className="p-6 border-b border-white/10 flex justify-between items-center rounded-t-2xl">
             <div>
               <h2 className="text-lg font-bold flex items-center gap-2 text-white">
@@ -527,11 +538,11 @@ export default function App() {
                   <th className="px-6 py-4 font-semibold">Ngày</th>
                   <th className="px-6 py-4 font-semibold text-right">Mobile</th>
                   <th className="px-6 py-4 font-semibold text-right">PC</th>
-                  <th className="px-6 py-4 font-semibold text-right">Tổng Click</th>
+                  <th className="px-6 py-4 font-semibold text-right">Tổng click</th>
                   <th className="px-6 py-4 font-semibold text-right">
                     <div className="flex items-center justify-end gap-2">
-                      Tỷ trọng Mobile
-                      <InfoTooltip content="Tỷ lệ % lượt click từ thiết bị Mobile so với tổng lượt click (Mobile + PC) của chuyên mục Thế Giới trong ngày đó. Giúp đánh giá xu hướng đọc báo trên điện thoại." />
+                      Tỷ trọng mobile
+                      <InfoTooltip content="Tỷ lệ % lượt click từ thiết bị mobile so với tổng lượt click của chuyên mục Thế Giới trong ngày. Giúp đánh giá xu hướng đọc báo trên điện thoại." align="right" />
                     </div>
                   </th>
                 </tr>
@@ -584,7 +595,7 @@ function KpiCard({ title, value, subtitle, icon, trend, trendTooltip }: { title:
     <motion.div 
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="bg-white/5 backdrop-blur-lg border border-white/10 p-6 rounded-2xl relative group hover:border-white/20 transition-colors"
+      className="bg-white/5 backdrop-blur-lg border border-white/10 p-6 rounded-2xl relative group hover:border-white/20 hover:z-50 transition-colors"
     >
       <div className="flex justify-between items-start mb-4">
         <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shadow-sm relative z-10 group-hover:scale-110 transition-transform">
@@ -637,7 +648,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
           ))}
           <div className="mt-4 pt-3 border-t border-white/10 flex flex-col gap-1 text-sm">
              <div className="flex justify-between items-center">
-                 <span className="text-slate-400 font-medium">Tỷ trọng Mobile:</span>
+                 <span className="text-slate-400 font-medium">Tỷ trọng mobile:</span>
                  <span className="font-bold text-emerald-400">{((rawData.mobile / rawData.total) * 100).toFixed(1)}%</span>
              </div>
              <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden mt-1 flex justify-start">
