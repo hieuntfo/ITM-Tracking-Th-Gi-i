@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, isBefore, startOfDay, subDays } from 'date-fns';
+import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, isBefore, startOfDay, subDays, startOfQuarter, endOfQuarter, setQuarter } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -84,22 +84,49 @@ export function DateRangePicker({ startDate, endDate, onChange, availableDates }
       setTempEnd(null);
   };
   
-  const applyPreset = (days: number) => {
+  const applyPreset = (id: string | number) => {
       if (availableDates.length === 0) return;
       const latestDataDate = availableDates[availableDates.length - 1]; 
-      if (days === -1) {
+      
+      if (id === -1 || id === 'all') {
           setTempStart(availableDates[0]);
           setTempEnd(latestDataDate);
           setCurrentMonth(startOfMonth(subMonths(latestDataDate, 1)));
           return;
       }
-      const start = subDays(latestDataDate, days - 1);
       
-      const realStart = start < availableDates[0] ? availableDates[0] : start;
+      if (typeof id === 'number') {
+          const start = subDays(latestDataDate, id - 1);
+          const realStart = start < availableDates[0] ? availableDates[0] : start;
+          
+          setTempStart(realStart);
+          setTempEnd(latestDataDate);
+          setCurrentMonth(startOfMonth(subMonths(latestDataDate, 1)));
+          return;
+      }
       
-      setTempStart(realStart);
-      setTempEnd(latestDataDate);
-      setCurrentMonth(startOfMonth(subMonths(latestDataDate, 1)));
+      if (typeof id === 'string' && id.startsWith('q')) {
+          const quarter = parseInt(id.charAt(1));
+          let qDate = setQuarter(latestDataDate, quarter);
+          
+          const start = startOfQuarter(qDate);
+          const end = endOfQuarter(qDate);
+          
+          const realStart = start < availableDates[0] ? availableDates[0] : start;
+          const realEnd = end > latestDataDate ? latestDataDate : end;
+          
+          if (realStart > latestDataDate || realEnd < availableDates[0]) {
+              // Ignore if outside range
+              setTempStart(start);
+              setTempEnd(end);
+              setCurrentMonth(startOfMonth(start));
+              return;
+          }
+          
+          setTempStart(realStart);
+          setTempEnd(realEnd);
+          setCurrentMonth(startOfMonth(realStart));
+      }
   }
 
   const renderMonth = (month: Date) => {
@@ -215,16 +242,19 @@ export function DateRangePicker({ startDate, endDate, onChange, availableDates }
             <div className="w-full md:w-48 bg-white/5 border-b md:border-b-0 md:border-r border-white/10 p-4 flex flex-row md:flex-col gap-1 overflow-x-auto">
               <div className="text-[10px] font-bold text-slate-500 mb-2 px-3 uppercase tracking-wider hidden md:block">Presets</div>
               {[
-                { label: 'Tất cả thời gian', days: -1 },
-                { label: 'Dữ liệu mới nhất', days: 1 },
-                { label: '3 ngày gần nhất', days: 3 },
-                { label: '7 ngày gần nhất', days: 7 },
-                { label: '30 ngày gần nhất', days: 30 },
-                { label: 'Quý gần nhất (90 ngày)', days: 90 },
+                { label: 'Tất cả thời gian', id: 'all' },
+                { label: 'Dữ liệu mới nhất', id: 1 },
+                { label: '3 ngày gần nhất', id: 3 },
+                { label: '7 ngày gần nhất', id: 7 },
+                { label: '30 ngày gần nhất', id: 30 },
+                { label: 'Quý 1', id: 'q1' },
+                { label: 'Quý 2', id: 'q2' },
+                { label: 'Quý 3', id: 'q3' },
+                { label: 'Quý 4', id: 'q4' },
               ].map((preset) => (
                 <button
                   key={preset.label}
-                  onClick={() => applyPreset(preset.days)}
+                  onClick={() => applyPreset(preset.id)}
                   className="px-3 py-2 text-sm text-left text-slate-300 hover:bg-white/10 hover:text-white rounded-lg whitespace-nowrap transition-colors"
                 >
                   {preset.label}
