@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, Legend, PieChart, Pie, Cell, ComposedChart, Line } from 'recharts';
 import { ArrowUpRight, ArrowDownRight, RefreshCw, Smartphone, Monitor, TrendingUp, Calendar, AlertCircle, BarChart3, Activity, Info } from 'lucide-react';
-import { format, parse, isAfter } from 'date-fns';
+import { format, parse, isAfter, subDays } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { cn } from './lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
@@ -136,15 +136,39 @@ export default function App() {
       return allData.map(d => new Date(d.timestamp));
   }, [allData]);
 
+  const previousData = useMemo(() => {
+      if (allData.length === 0 || data.length === 0) return [];
+      
+      const latestTimestamp = data[data.length - 1].timestamp;
+      const earliestTimestamp = data[0].timestamp;
+      
+      const latestDate = new Date(latestTimestamp);
+      const earliestDate = new Date(earliestTimestamp);
+      
+      const days = Math.round((latestDate.getTime() - earliestDate.getTime()) / (24 * 60 * 60 * 1000)) + 1;
+      
+      // Calculate previous period dates safely using date-fns
+      const prevEndDate = subDays(earliestDate, 1);
+      const prevStartDate = subDays(earliestDate, days);
+      
+      const prevStart = prevStartDate.getTime();
+      const prevEnd = prevEndDate.getTime() + (23 * 60 * 60 + 59 * 60 + 59) * 1000; // end of that day
+      
+      return allData.filter(d => d.timestamp >= prevStart && d.timestamp <= prevEnd);
+  }, [allData, data]);
+
   const stats = useMemo(() => {
     if (data.length === 0) return null;
     
     const latest = data[data.length - 1];
-    const previous = data.length > 1 ? data[data.length - 2] : null;
     
     const totalClicks = data.reduce((acc, row) => acc + row.total, 0);
     const totalMobile = data.reduce((acc, row) => acc + row.mobile, 0);
     const totalPC = data.reduce((acc, row) => acc + row.pc, 0);
+    
+    const prevTotalClicks = previousData.reduce((acc, row) => acc + row.total, 0);
+    const prevTotalMobile = previousData.reduce((acc, row) => acc + row.mobile, 0);
+    const prevTotalPC = previousData.reduce((acc, row) => acc + row.pc, 0);
     
     let maxDay = data[0];
     for (const row of data) {
@@ -156,22 +180,29 @@ export default function App() {
       return ((current - prev) / prev) * 100;
     };
     
-    const totalGrowth = previous ? calculateGrowth(latest.total, previous.total) : 0;
-    const mobileGrowth = previous ? calculateGrowth(latest.mobile, previous.mobile) : 0;
-    const pcGrowth = previous ? calculateGrowth(latest.pc, previous.pc) : 0;
+    const totalGrowth = previousData.length > 0 ? calculateGrowth(totalClicks, prevTotalClicks) : 0;
+    const mobileGrowth = previousData.length > 0 ? calculateGrowth(totalMobile, prevTotalMobile) : 0;
+    const pcGrowth = previousData.length > 0 ? calculateGrowth(totalPC, prevTotalPC) : 0;
+
+    const earliestTimestamp = data[0].timestamp;
+    const latestTimestamp = latest.timestamp;
+    const durationDays = Math.round((latestTimestamp - earliestTimestamp) / (24 * 60 * 60 * 1000)) + 1;
 
     return {
       totalClicks,
       totalMobile,
       totalPC,
       latest,
-      previous,
       totalGrowth,
       mobileGrowth,
       pcGrowth,
-      maxDay
+      maxDay,
+      prevTotalClicks,
+      prevTotalMobile,
+      prevTotalPC,
+      durationDays
     };
-  }, [data]);
+  }, [data, previousData]);
 
   const formatNumber = (num: number) => {
     return new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 }).format(num);
@@ -190,6 +221,27 @@ export default function App() {
     }));
   }, [data]);
   
+  const comparisonChartData = useMemo(() => {
+    if (!stats) return [];
+    return [
+      {
+        name: 'Tổng Click',
+        current: stats.totalClicks,
+        previous: stats.prevTotalClicks,
+      },
+      {
+        name: 'Mobile',
+        current: stats.totalMobile,
+        previous: stats.prevTotalMobile,
+      },
+      {
+        name: 'PC',
+        current: stats.totalPC,
+        previous: stats.prevTotalPC,
+      }
+    ];
+  }, [stats]);
+
   if (loading && data.length === 0) {
     return (
       <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center relative overflow-hidden">
@@ -420,6 +472,39 @@ export default function App() {
           </section>
         </div>
 
+        {/* Comparison Chart */}
+        <section className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-6 flex flex-col relative z-20">
+          <div className="flex justify-between items-start mb-6 gap-4">
+            <div>
+              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                So sánh với kỳ trước
+                <InfoTooltip content={`Báo cáo so sánh sự biến động của dữ liệu kỳ hiện tại (${stats?.durationDays || 0} ngày) so với kỳ trước (${stats?.durationDays || 0} ngày liền kề trước đó).`} />
+              </h2>
+              <p className="text-sm text-slate-400 font-medium">Đối chiếu chênh lệch tương tác giữa hai mốc thời gian tương đương</p>
+            </div>
+          </div>
+          
+          <div className="w-full mt-4">
+            <ResponsiveContainer width="100%" height={350}>
+              <BarChart data={comparisonChartData} margin={{ top: 20, right: 10, left: -10, bottom: 0 }} barGap={12}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ffffff1a" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 13, fontWeight: 600 }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 500 }} tickFormatter={(val) => formatShortNumber(val)} />
+                <RechartsTooltip 
+                  cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }}
+                  contentStyle={{ borderRadius: '12px', background: 'rgba(15, 23, 42, 0.95)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', backdropFilter: 'blur(12px)', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.3)', fontWeight: 'bold' }}
+                  itemStyle={{ color: 'white' }}
+                  formatter={(value: number) => formatNumber(value)}
+                />
+                <Legend wrapperStyle={{ paddingTop: '20px', fontSize: '13px', fontWeight: 500 }} />
+                
+                <Bar dataKey="current" name="Kỳ hiện tại" fill="#3b82f6" radius={[6, 6, 0, 0]} barSize={50} />
+                <Bar dataKey="previous" name="Kỳ trước" fill="#64748b" radius={[6, 6, 0, 0]} barSize={50} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </section>
+
         {/* Recent Data Table */}
         <section className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl">
           <div className="p-6 border-b border-white/10 flex justify-between items-center rounded-t-2xl">
@@ -508,7 +593,7 @@ function KpiCard({ title, value, subtitle, icon, trend }: { title: string, value
             trend > 0 ? "bg-green-500/10 text-green-400 border-green-500/20" : trend < 0 ? "bg-red-500/10 text-red-400 border-red-500/20" : "bg-white/5 text-slate-400 border-white/10"
           )}>
             {trend > 0 ? <ArrowUpRight className="w-3.5 h-3.5" /> : trend < 0 ? <ArrowDownRight className="w-3.5 h-3.5" /> : null}
-            {Math.abs(trend).toFixed(1)}% <span className="font-medium opacity-80">(So với hôm qua)</span>
+            {Math.abs(trend).toFixed(1)}% <span className="font-medium opacity-80">(So với kỳ trước)</span>
           </div>
         )}
       </div>
