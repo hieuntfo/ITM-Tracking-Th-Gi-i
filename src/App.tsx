@@ -26,11 +26,11 @@ const COLORS = {
 
 function InfoTooltip({ content }: { content: string }) {
   return (
-    <div className="group relative inline-flex items-center justify-center">
+    <div className="group relative z-[9999] inline-flex items-center justify-center">
       <Info className="w-4 h-4 text-slate-400 hover:text-white cursor-help transition-colors" />
-      <div className="absolute top-[calc(100%+8px)] right-0 md:left-1/2 md:-translate-x-1/2 px-3 py-2 bg-slate-800 text-slate-200 text-xs leading-relaxed rounded-lg shadow-xl border border-white/10 w-64 md:w-72 opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-[60] font-normal text-left">
+      <div className="absolute top-[calc(100%+8px)] left-1/2 -translate-x-1/2 px-3 py-2 bg-slate-800 text-slate-200 text-xs leading-relaxed rounded-lg shadow-xl border border-white/10 w-64 md:w-72 opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-[9999] font-normal text-left">
         {content}
-        <div className="absolute bottom-full right-2 md:left-1/2 md:-translate-x-1/2 border-4 border-transparent border-b-slate-800"></div>
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-slate-800"></div>
       </div>
     </div>
   );
@@ -343,7 +343,7 @@ export default function App() {
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <KpiCard 
-              title="Tổng lượt Click (Luỹ kế)"
+              title="Tổng lượt click (luỹ kế)"
               value={formatNumber(stats.totalClicks)}
               subtitle={`Cập nhật đến ${format(new Date(stats.latest!.timestamp), 'dd/MM/yyyy')}`}
               icon={<BarChart3 className="w-5 h-5 text-emerald-400" />}
@@ -351,7 +351,7 @@ export default function App() {
               trendTooltip={`Chênh lệch so với kỳ trước (${stats.durationDays} ngày liền kề)`}
             />
             <KpiCard 
-              title="Click Mobile (Luỹ kế)"
+              title="Click mobile (luỹ kế)"
               value={formatNumber(stats.totalMobile)}
               subtitle={`${((stats.totalMobile / stats.totalClicks) * 100).toFixed(1)}% tổng click`}
               icon={<Smartphone className="w-5 h-5 text-emerald-400" />}
@@ -359,7 +359,7 @@ export default function App() {
               trendTooltip={`Chênh lệch click trên mobile so với kỳ trước (${stats.durationDays} ngày liền kề)`}
             />
             <KpiCard 
-              title="Click PC (Luỹ kế)"
+              title="Click PC (luỹ kế)"
               value={formatNumber(stats.totalPC)}
               subtitle={`${((stats.totalPC / stats.totalClicks) * 100).toFixed(1)}% tổng click`}
               icon={<Monitor className="w-5 h-5 text-blue-400" />}
@@ -429,7 +429,7 @@ export default function App() {
           <section className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-6 flex flex-col z-10">
             <div>
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                Tỷ trọng Nền tảng
+                Tỷ trọng nền tảng
                 <InfoTooltip content="Thể hiện tỷ lệ phần trăm phân bổ lượt tương tác (click) từ 2 nền tảng Mobile và PC dựa trên tổng lượt click trong khoảng khoảng thời gian đã được chọn." />
               </h2>
               <p className="text-sm text-slate-400 mb-6 font-medium">Mobile vs PC trong thời gian chọn</p>
@@ -522,7 +522,7 @@ export default function App() {
           
           <div className="overflow-x-auto pb-4 rounded-b-2xl">
             <table className="w-full text-left border-collapse min-w-[700px]">
-              <thead className="bg-white/5 text-slate-400 text-xs uppercase">
+              <thead className="bg-[#1e293b]/50 text-slate-400 text-[13px]">
                 <tr className="border-b border-white/10">
                   <th className="px-6 py-4 font-semibold">Ngày</th>
                   <th className="px-6 py-4 font-semibold text-right">Mobile</th>
@@ -584,7 +584,7 @@ function KpiCard({ title, value, subtitle, icon, trend, trendTooltip }: { title:
     <motion.div 
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="bg-white/5 backdrop-blur-lg border border-white/10 p-6 rounded-2xl relative overflow-hidden group hover:border-white/20 transition-colors"
+      className="bg-white/5 backdrop-blur-lg border border-white/10 p-6 rounded-2xl relative group hover:border-white/20 transition-colors"
     >
       <div className="flex justify-between items-start mb-4">
         <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shadow-sm relative z-10 group-hover:scale-110 transition-transform">
@@ -592,7 +592,7 @@ function KpiCard({ title, value, subtitle, icon, trend, trendTooltip }: { title:
         </div>
         {trend !== undefined && (
           <div className={cn(
-            "flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 rounded-full z-10 border",
+            "flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 rounded-full z-20 border relative",
             trend > 0 ? "bg-green-500/10 text-green-400 border-green-500/20" : trend < 0 ? "bg-red-500/10 text-red-400 border-red-500/20" : "bg-white/5 text-slate-400 border-white/10"
           )}>
             {trend > 0 ? <ArrowUpRight className="w-3.5 h-3.5" /> : trend < 0 ? <ArrowDownRight className="w-3.5 h-3.5" /> : null}
@@ -603,8 +603,8 @@ function KpiCard({ title, value, subtitle, icon, trend, trendTooltip }: { title:
           </div>
         )}
       </div>
-      <div className="relative z-10">
-        <p className="text-slate-400 text-sm font-medium mb-1 uppercase tracking-wider">{title}</p>
+      <div className="relative z-10 block">
+        <p className="text-slate-400 text-sm font-medium mb-1 drop-shadow-sm">{title}</p>
         <h3 className="text-3xl xl:text-4xl font-bold text-white mb-2">{value}</h3>
         <p className="text-sm font-medium text-slate-400">{subtitle}</p>
       </div>
