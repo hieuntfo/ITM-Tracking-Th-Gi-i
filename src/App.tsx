@@ -348,6 +348,7 @@ export default function App() {
               subtitle={`Cập nhật đến ${format(new Date(stats.latest!.timestamp), 'dd/MM/yyyy')}`}
               icon={<BarChart3 className="w-5 h-5 text-emerald-400" />}
               trend={stats.totalGrowth}
+              trendTooltip={`Chênh lệch so với kỳ trước (${stats.durationDays} ngày liền kề)`}
             />
             <KpiCard 
               title="Click Mobile (Luỹ kế)"
@@ -355,6 +356,7 @@ export default function App() {
               subtitle={`${((stats.totalMobile / stats.totalClicks) * 100).toFixed(1)}% tổng click`}
               icon={<Smartphone className="w-5 h-5 text-emerald-400" />}
               trend={stats.mobileGrowth}
+              trendTooltip={`Chênh lệch click trên mobile so với kỳ trước (${stats.durationDays} ngày liền kề)`}
             />
             <KpiCard 
               title="Click PC (Luỹ kế)"
@@ -362,6 +364,7 @@ export default function App() {
               subtitle={`${((stats.totalPC / stats.totalClicks) * 100).toFixed(1)}% tổng click`}
               icon={<Monitor className="w-5 h-5 text-blue-400" />}
               trend={stats.pcGrowth}
+              trendTooltip={`Chênh lệch click trên PC so với kỳ trước (${stats.durationDays} ngày liền kề)`}
             />
             <KpiCard 
               title="Ngày cao điểm nhất"
@@ -576,7 +579,7 @@ export default function App() {
 
 // Subcomponents
 
-function KpiCard({ title, value, subtitle, icon, trend }: { title: string, value: string, subtitle: string, icon: React.ReactNode, trend?: number }) {
+function KpiCard({ title, value, subtitle, icon, trend, trendTooltip }: { title: string, value: string, subtitle: string, icon: React.ReactNode, trend?: number, trendTooltip?: string }) {
   return (
     <motion.div 
       initial={{ opacity: 0, scale: 0.95 }}
@@ -589,11 +592,14 @@ function KpiCard({ title, value, subtitle, icon, trend }: { title: string, value
         </div>
         {trend !== undefined && (
           <div className={cn(
-            "flex items-center gap-1 text-xs font-bold px-2.5 py-1.5 rounded-full z-10 border",
+            "flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 rounded-full z-10 border",
             trend > 0 ? "bg-green-500/10 text-green-400 border-green-500/20" : trend < 0 ? "bg-red-500/10 text-red-400 border-red-500/20" : "bg-white/5 text-slate-400 border-white/10"
           )}>
             {trend > 0 ? <ArrowUpRight className="w-3.5 h-3.5" /> : trend < 0 ? <ArrowDownRight className="w-3.5 h-3.5" /> : null}
-            {Math.abs(trend).toFixed(1)}% <span className="font-medium opacity-80">(So với kỳ trước)</span>
+            <span className="flex items-center gap-1.5">
+              {Math.abs(trend).toFixed(1)}% <span className="font-medium opacity-80">(So với kỳ trước)</span>
+              {trendTooltip && <InfoTooltip content={trendTooltip} />}
+            </span>
           </div>
         )}
       </div>
