@@ -220,6 +220,7 @@ export function DateRangePicker({ startDate, endDate, onChange, availableDates }
                 { label: '3 ngày gần nhất', days: 3 },
                 { label: '7 ngày gần nhất', days: 7 },
                 { label: '30 ngày gần nhất', days: 30 },
+                { label: 'Quý gần nhất (90 ngày)', days: 90 },
               ].map((preset) => (
                 <button
                   key={preset.label}

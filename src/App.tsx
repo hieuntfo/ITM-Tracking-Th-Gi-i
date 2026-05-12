@@ -484,8 +484,8 @@ export default function App() {
             </div>
           </div>
           
-          <div className="w-full mt-4">
-            <ResponsiveContainer width="100%" height={350}>
+          <div className="w-full mt-4 h-[350px]">
+            <ResponsiveContainer width="100%" height="100%">
               <BarChart data={comparisonChartData} margin={{ top: 20, right: 10, left: -10, bottom: 0 }} barGap={12}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ffffff1a" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 13, fontWeight: 600 }} dy={10} />
