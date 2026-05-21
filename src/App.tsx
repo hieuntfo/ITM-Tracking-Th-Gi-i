@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, Legend, PieChart, Pie, Cell, ComposedChart, Line } from 'recharts';
-import { ArrowUpRight, ArrowDownRight, RefreshCw, Smartphone, Monitor, TrendingUp, Calendar, AlertCircle, BarChart3, Activity, Info } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, RefreshCw, Smartphone, Monitor, TrendingUp, Calendar, AlertCircle, BarChart3, Activity, Info, Sun, Moon } from 'lucide-react';
 import { format, parse, isAfter, subDays } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { cn } from './lib/utils';
@@ -38,21 +38,32 @@ function InfoTooltip({ content, align = 'center' }: { content: string, align?: '
 
   return (
     <div className="group relative z-[9999] inline-flex items-center justify-center">
-      <Info className="w-4 h-4 text-slate-400 hover:text-white cursor-help transition-colors" />
-      <div className={`absolute top-[calc(100%+8px)] ${positionClasses} px-3 py-2 bg-slate-800 text-slate-200 text-xs leading-relaxed rounded-lg shadow-xl border border-white/10 w-48 sm:w-64 md:w-72 opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-[9999] font-normal text-left`}>
+      <Info className="w-4 h-4 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-help transition-colors" />
+      <div className={`absolute top-[calc(100%+8px)] ${positionClasses} px-3 py-2 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs leading-relaxed rounded-lg shadow-xl border border-slate-200 dark:border-white/10 w-48 sm:w-64 md:w-72 opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-[9999] font-normal text-left`}>
         {content}
-        <div className={`absolute bottom-full ${arrowClasses} border-4 border-transparent border-b-slate-800`}></div>
+        <div className={`absolute bottom-full ${arrowClasses} border-4 border-transparent border-b-white dark:border-b-slate-800`}></div>
       </div>
     </div>
   );
 }
 
 export default function App() {
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
+
   const [allData, setAllData] = useState<DataRow[]>([]);
   const [data, setData] = useState<DataRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [platform, setPlatform] = useState<'all' | 'mobile' | 'pc'>('all');
   
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
@@ -234,6 +245,19 @@ export default function App() {
   
   const comparisonChartData = useMemo(() => {
     if (!stats) return [];
+    
+    if (platform === 'mobile') {
+      return [
+        { name: 'Mobile', current: stats.totalMobile, previous: stats.prevTotalMobile }
+      ];
+    }
+    
+    if (platform === 'pc') {
+      return [
+        { name: 'PC', current: stats.totalPC, previous: stats.prevTotalPC }
+      ];
+    }
+    
     return [
       {
         name: 'Tổng Click',
@@ -251,35 +275,35 @@ export default function App() {
         previous: stats.prevTotalPC,
       }
     ];
-  }, [stats]);
+  }, [stats, platform]);
 
   if (loading && data.length === 0) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center relative overflow-hidden">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col items-center justify-center relative overflow-hidden">
         <div className="absolute inset-0 z-0 pointer-events-none">
           <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-900/30 rounded-full blur-[120px]"></div>
           <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-red-900/20 rounded-full blur-[120px]"></div>
         </div>
         <RefreshCw className="w-8 h-8 text-blue-500 animate-spin mb-4 relative z-10" />
-        <p className="text-slate-400 font-medium relative z-10">Đang tải dữ liệu Thế Giới...</p>
+        <p className="text-slate-500 dark:text-slate-400 font-medium relative z-10">Đang tải dữ liệu Thế Giới...</p>
       </div>
     );
   }
 
   if (error && data.length === 0) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-4 relative overflow-hidden">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col items-center justify-center p-4 relative overflow-hidden">
         <div className="absolute inset-0 z-0 pointer-events-none">
           <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-900/30 rounded-full blur-[120px]"></div>
           <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-red-900/20 rounded-full blur-[120px]"></div>
         </div>
-        <div className="bg-white/5 backdrop-blur-lg p-6 rounded-2xl shadow-sm border border-red-500/20 max-w-md w-full text-center relative z-10">
+        <div className="bg-slate-100 dark:bg-white/5 backdrop-blur-lg p-6 rounded-2xl shadow-sm border border-red-500/20 max-w-md w-full text-center relative z-10">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-lg font-bold text-white mb-2">Lỗi tải dữ liệu</h2>
-          <p className="text-slate-400 mb-6">{error}</p>
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Lỗi tải dữ liệu</h2>
+          <p className="text-slate-500 dark:text-slate-400 mb-6">{error}</p>
           <button 
             onClick={fetchData}
-            className="bg-white/10 hover:bg-white/20 text-white px-6 py-2 rounded-lg font-medium transition-colors border border-white/10"
+            className="bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 text-slate-900 dark:text-white px-6 py-2 rounded-lg font-medium transition-colors border border-slate-200 dark:border-white/10"
           >
             Thử lại
           </button>
@@ -294,7 +318,7 @@ export default function App() {
   ] : [];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans pb-12 relative overflow-hidden flex flex-col">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans pb-12 relative overflow-hidden flex flex-col">
       {/* Mesh Background Layer */}
       <div className="absolute inset-0 z-0 pointer-events-none fixed">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-900/30 rounded-full blur-[120px]"></div>
@@ -302,20 +326,41 @@ export default function App() {
       </div>
 
       {/* Header */}
-      <header className="relative z-50 bg-white/5 backdrop-blur-xl border-b border-white/10 sticky top-0">
+      <header className="relative z-50 bg-slate-100 dark:bg-white/5 backdrop-blur-xl border-b border-slate-200 dark:border-white/10 sticky top-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 gap-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-[#9f224e] rounded-xl flex items-center justify-center shadow-inner">
-                <span className="text-white font-bold text-xl leading-none">VN</span>
+                <span className="text-slate-900 dark:text-white font-bold text-xl leading-none">VN</span>
               </div>
               <div>
-                <h1 className="text-xl font-bold tracking-tight text-white">VnExpress <span className="text-white/20 font-normal mx-1">|</span> <span className="text-[#9f224e]">Thế Giới</span></h1>
-                <p className="text-sm text-slate-400 font-medium">Dashboard Tương Tác</p>
+                <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">VnExpress <span className="text-slate-300 dark:text-white/20 font-normal mx-1">|</span> <span className="text-[#9f224e]">Thế Giới</span></h1>
+                <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Dashboard Tương Tác</p>
               </div>
             </div>
             
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex bg-slate-200/50 dark:bg-white/5 rounded-xl p-1 border border-slate-200 dark:border-white/10">
+                <button 
+                  onClick={() => setPlatform('all')}
+                  className={cn("px-3 py-1.5 text-sm font-semibold rounded-lg transition-all", platform === 'all' ? "bg-white dark:bg-slate-800 shadow-sm text-slate-900 dark:text-white" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200")}
+                >
+                  Tất cả
+                </button>
+                <button 
+                  onClick={() => setPlatform('mobile')}
+                  className={cn("px-3 py-1.5 text-sm font-semibold rounded-lg transition-all", platform === 'mobile' ? "bg-white dark:bg-slate-800 shadow-sm text-slate-900 dark:text-white" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200")}
+                >
+                  Mobile
+                </button>
+                <button 
+                  onClick={() => setPlatform('pc')}
+                  className={cn("px-3 py-1.5 text-sm font-semibold rounded-lg transition-all", platform === 'pc' ? "bg-white dark:bg-slate-800 shadow-sm text-slate-900 dark:text-white" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200")}
+                >
+                  PC
+                </button>
+              </div>
+
               <DateRangePicker 
                 startDate={startDate}
                 endDate={endDate}
@@ -338,10 +383,17 @@ export default function App() {
               <button 
                 onClick={fetchData} 
                 disabled={loading}
-                className="p-2.5 text-slate-400 hover:text-white hover:bg-white/10 rounded-xl transition-colors border border-white/5 hover:border-white/10 bg-white/5"
+                className="p-2.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 rounded-xl transition-colors border border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10 bg-slate-100 dark:bg-white/5"
                 title="Làm mới dữ liệu"
               >
                 <RefreshCw className={cn("w-4 h-4", loading && "animate-spin text-blue-400")} />
+              </button>
+              <button
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                className="p-2.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 rounded-xl transition-colors border border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10 bg-slate-100 dark:bg-white/5"
+                title="Bật/Tắt giao diện tối"
+              >
+                {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-500" />}
               </button>
             </div>
           </div>
@@ -389,14 +441,14 @@ export default function App() {
         {/* Charts Row */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {/* Main Trend Chart */}
-          <section className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-6 xl:col-span-2 flex flex-col">
+          <section className={cn("bg-slate-100 dark:bg-white/5 backdrop-blur-lg border border-slate-200 dark:border-white/10 rounded-2xl p-6 flex flex-col", platform === 'all' ? "xl:col-span-2" : "xl:col-span-3")}>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
               <div>
-                <h2 className="text-lg font-bold flex items-center gap-2 text-white">
+                <h2 className="text-lg font-bold flex items-center gap-2 text-slate-900 dark:text-white">
                   <Activity className="w-5 h-5 text-[#9f224e]" />
                   Xu hướng Click theo ngày
                 </h2>
-                <p className="text-sm text-slate-400 font-medium">Lưu lượng tương tác từ Mobile và PC</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Lưu lượng tương tác từ Mobile và PC</p>
               </div>
             </div>
             
@@ -418,12 +470,12 @@ export default function App() {
                     tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 500 }}
                     tickFormatter={(val) => formatShortNumber(val)}
                   />
-                  <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255, 255, 255, 0.05)', strokeWidth: 1 }} />
+                  <RechartsTooltip content={<CustomTooltip platform={platform} />} cursor={{ fill: 'rgba(255, 255, 255, 0.05)', strokeWidth: 1 }} />
                   <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px', fontSize: '13px', fontWeight: 500 }} />
                   
-                  <Area type="monotone" name="Tổng" dataKey="total" fill="url(#colorTotal)" stroke={COLORS.total} strokeWidth={2} fillOpacity={1} opacity={0.3} />
-                  <Line type="monotone" name="Mobile" dataKey="mobile" stroke={COLORS.mobile} strokeWidth={3} dot={false} activeDot={{ r: 6, strokeWidth: 0, fill: COLORS.mobile }} />
-                  <Line type="monotone" name="PC" dataKey="pc" stroke={COLORS.pc} strokeWidth={3} dot={false} activeDot={{ r: 6, strokeWidth: 0, fill: COLORS.pc }} />
+                  {platform === 'all' && <Area type="monotone" name="Tổng" dataKey="total" fill="url(#colorTotal)" stroke={COLORS.total} strokeWidth={2} fillOpacity={1} opacity={0.3} />}
+                  {(platform === 'all' || platform === 'mobile') && <Line type="monotone" name="Mobile" dataKey="mobile" stroke={COLORS.mobile} strokeWidth={platform === 'mobile' ? 4 : 3} dot={false} activeDot={{ r: 6, strokeWidth: 0, fill: COLORS.mobile }} />}
+                  {(platform === 'all' || platform === 'pc') && <Line type="monotone" name="PC" dataKey="pc" stroke={COLORS.pc} strokeWidth={platform === 'pc' ? 4 : 3} dot={false} activeDot={{ r: 6, strokeWidth: 0, fill: COLORS.pc }} />}
                   
                   <defs>
                     <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
@@ -437,64 +489,66 @@ export default function App() {
           </section>
 
           {/* Allocation Pie Chart */}
-          <section className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-6 flex flex-col z-10 hover:z-50 transition-all">
-            <div>
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                Tỷ trọng nền tảng
-                <InfoTooltip content="Thể hiện tỷ lệ phần trăm phân bổ lượt tương tác (click) từ 2 nền tảng Mobile và PC dựa trên tổng lượt click trong khoảng khoảng thời gian đã được chọn." />
-              </h2>
-              <p className="text-sm text-slate-400 mb-6 font-medium">Mobile vs PC trong thời gian chọn</p>
-            </div>
-            
-            <div className="flex-1 flex flex-col items-center justify-center min-h-[300px]">
-              <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={70}
-                    outerRadius={100}
-                    paddingAngle={5}
-                    dataKey="value"
-                    stroke="none"
-                  >
-                    {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <RechartsTooltip 
-                    formatter={(value: number) => formatNumber(value)}
-                    contentStyle={{ borderRadius: '12px', background: 'rgba(15, 23, 42, 0.95)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', backdropFilter: 'blur(12px)', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.3)', fontWeight: 'bold' }}
-                    itemStyle={{ color: 'white' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-              
-              <div className="flex justify-center gap-8 w-full mt-2">
-                {pieData.map((d) => (
-                  <div key={d.name} className="flex flex-col items-center p-3 rounded-xl bg-white/5 border border-white/10 min-w-[100px]">
-                    <div className="flex items-center gap-2 mb-1">
-                      <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: d.color }}></div>
-                      <span className="text-sm font-medium text-slate-300">{d.name}</span>
-                    </div>
-                    <span className="text-xl font-bold tracking-tight text-white">{((d.value / (stats?.totalClicks || 1)) * 100).toFixed(1)}%</span>
-                  </div>
-                ))}
+          {platform === 'all' && (
+            <section className="bg-slate-100 dark:bg-white/5 backdrop-blur-lg border border-slate-200 dark:border-white/10 rounded-2xl p-6 flex flex-col z-10 hover:z-50 transition-all">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  Tỷ trọng nền tảng
+                  <InfoTooltip content="Thể hiện tỷ lệ phần trăm phân bổ lượt tương tác (click) từ 2 nền tảng Mobile và PC dựa trên tổng lượt click trong khoảng khoảng thời gian đã được chọn." />
+                </h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 font-medium">Mobile vs PC trong thời gian chọn</p>
               </div>
-            </div>
-          </section>
+              
+              <div className="flex-1 flex flex-col items-center justify-center min-h-[300px]">
+                <ResponsiveContainer width="100%" height={250}>
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={70}
+                      outerRadius={100}
+                      paddingAngle={5}
+                      dataKey="value"
+                      stroke="none"
+                    >
+                      {pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip 
+                      formatter={(value: number) => formatNumber(value)}
+                      contentStyle={{ borderRadius: '12px', background: 'rgba(15, 23, 42, 0.95)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', backdropFilter: 'blur(12px)', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.3)', fontWeight: 'bold' }}
+                      itemStyle={{ color: 'white' }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                
+                <div className="flex justify-center gap-8 w-full mt-2">
+                  {pieData.map((d) => (
+                    <div key={d.name} className="flex flex-col items-center p-3 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 min-w-[100px]">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: d.color }}></div>
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{d.name}</span>
+                      </div>
+                      <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">{((d.value / (stats?.totalClicks || 1)) * 100).toFixed(1)}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
         </div>
 
         {/* Comparison Chart */}
-        <section className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-6 flex flex-col relative z-20 hover:z-50 transition-all">
+        <section className="bg-slate-100 dark:bg-white/5 backdrop-blur-lg border border-slate-200 dark:border-white/10 rounded-2xl p-6 flex flex-col relative z-20 hover:z-50 transition-all">
           <div className="flex justify-between items-start mb-6 gap-4">
             <div>
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 So sánh với kỳ trước
                 <InfoTooltip content={`Báo cáo so sánh sự biến động của dữ liệu kỳ hiện tại (${stats?.durationDays || 0} ngày) so với kỳ trước (${stats?.durationDays || 0} ngày liền kề trước đó).`} />
               </h2>
-              <p className="text-sm text-slate-400 font-medium">Đối chiếu chênh lệch tương tác giữa hai mốc thời gian tương đương</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Đối chiếu chênh lệch tương tác giữa hai mốc thời gian tương đương</p>
             </div>
           </div>
           
@@ -520,63 +574,73 @@ export default function App() {
         </section>
 
         {/* Recent Data Table */}
-        <section className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl hover:z-50 relative transition-all">
-          <div className="p-6 border-b border-white/10 flex justify-between items-center rounded-t-2xl">
+        <section className="bg-slate-100 dark:bg-white/5 backdrop-blur-lg border border-slate-200 dark:border-white/10 rounded-2xl hover:z-50 relative transition-all">
+          <div className="p-6 border-b border-slate-200 dark:border-white/10 flex justify-between items-center rounded-t-2xl">
             <div>
-              <h2 className="text-lg font-bold flex items-center gap-2 text-white">
-                <Calendar className="w-5 h-5 text-slate-400" />
+              <h2 className="text-lg font-bold flex items-center gap-2 text-slate-900 dark:text-white">
+                <Calendar className="w-5 h-5 text-slate-500 dark:text-slate-400" />
                 Dữ liệu theo ngày
               </h2>
-              <p className="text-sm text-slate-400 font-medium">Biến động tương tác chi tiết từng ngày trong khoảng thời gian chọn</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Biến động tương tác chi tiết từng ngày trong khoảng thời gian chọn</p>
             </div>
           </div>
           
           <div className="overflow-x-auto pb-4 rounded-b-2xl">
             <table className="w-full text-left border-collapse min-w-[700px]">
-              <thead className="bg-[#1e293b]/50 text-slate-400 text-[13px]">
-                <tr className="border-b border-white/10">
+              <thead className="bg-slate-200/50 dark:bg-[#1e293b]/50 text-slate-500 dark:text-slate-400 text-[13px]">
+                <tr className="border-b border-slate-200 dark:border-white/10">
                   <th className="px-6 py-4 font-semibold">Ngày</th>
-                  <th className="px-6 py-4 font-semibold text-right">Mobile</th>
-                  <th className="px-6 py-4 font-semibold text-right">PC</th>
-                  <th className="px-6 py-4 font-semibold text-right">Tổng click</th>
-                  <th className="px-6 py-4 font-semibold text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      Tỷ trọng mobile
-                      <InfoTooltip content="Tỷ lệ % lượt click từ thiết bị mobile so với tổng lượt click của chuyên mục Thế Giới trong ngày. Giúp đánh giá xu hướng đọc báo trên điện thoại." align="right" />
-                    </div>
-                  </th>
+                  {(platform === 'all' || platform === 'mobile') && <th className="px-6 py-4 font-semibold text-right">Mobile</th>}
+                  {(platform === 'all' || platform === 'pc') && <th className="px-6 py-4 font-semibold text-right">PC</th>}
+                  {platform === 'all' && <th className="px-6 py-4 font-semibold text-right">Tổng click</th>}
+                  {platform === 'all' && (
+                    <th className="px-6 py-4 font-semibold text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        Tỷ trọng mobile
+                        <InfoTooltip content="Tỷ lệ % lượt click từ thiết bị mobile so với tổng lượt click của chuyên mục Thế Giới trong ngày. Giúp đánh giá xu hướng đọc báo trên điện thoại." align="right" />
+                      </div>
+                    </th>
+                  )}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/10">
+              <tbody className="divide-y divide-slate-200 dark:divide-white/10">
                 {[...data].reverse().slice(0, 30).map((row, i) => (
                   <motion.tr 
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
                     key={row.dateStr} 
-                    className="hover:bg-white/5 transition-colors"
+                    className="hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
                   >
                     <td className="px-6 py-4">
-                      <div className="font-bold text-white">{format(new Date(row.timestamp), 'dd/MM/yyyy')}</div>
-                      <div className="text-xs font-medium text-slate-400 capitalize">{format(new Date(row.timestamp), 'EEEE', { locale: vi })}</div>
+                      <div className="font-bold text-slate-900 dark:text-white">{format(new Date(row.timestamp), 'dd/MM/yyyy')}</div>
+                      <div className="text-xs font-medium text-slate-500 dark:text-slate-400 capitalize">{format(new Date(row.timestamp), 'EEEE', { locale: vi })}</div>
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <span className="font-mono text-emerald-400">{formatNumber(row.mobile)}</span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <span className="font-mono text-blue-400">{formatNumber(row.pc)}</span>
-                    </td>
-                    <td className="px-6 py-4 text-right font-bold text-slate-100 bg-white/5">
-                      {formatNumber(row.total)}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-3">
-                        <span className="text-sm font-bold text-slate-300">{((row.mobile / row.total) * 100).toFixed(1)}%</span>
-                        <div className="w-20 h-2 bg-white/10 rounded-full overflow-hidden shadow-inner flex shrink-0 justify-start">
-                          <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${(row.mobile / row.total) * 100}%` }}></div>
+                    {(platform === 'all' || platform === 'mobile') && (
+                      <td className="px-6 py-4 text-right">
+                        <span className="font-mono text-emerald-400">{formatNumber(row.mobile)}</span>
+                      </td>
+                    )}
+                    {(platform === 'all' || platform === 'pc') && (
+                      <td className="px-6 py-4 text-right">
+                        <span className="font-mono text-blue-400">{formatNumber(row.pc)}</span>
+                      </td>
+                    )}
+                    {platform === 'all' && (
+                      <td className="px-6 py-4 text-right font-bold text-slate-900 dark:text-slate-100 bg-slate-100 dark:bg-white/5">
+                        {formatNumber(row.total)}
+                      </td>
+                    )}
+                    {platform === 'all' && (
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-3">
+                          <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{((row.mobile / row.total) * 100).toFixed(1)}%</span>
+                          <div className="w-20 h-2 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden shadow-inner flex shrink-0 justify-start">
+                            <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${(row.mobile / row.total) * 100}%` }}></div>
+                          </div>
                         </div>
-                      </div>
-                    </td>
+                      </td>
+                    )}
                   </motion.tr>
                 ))}
               </tbody>
@@ -595,16 +659,16 @@ function KpiCard({ title, value, subtitle, icon, trend, trendTooltip }: { title:
     <motion.div 
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="bg-white/5 backdrop-blur-lg border border-white/10 p-6 rounded-2xl relative group hover:border-white/20 hover:z-50 transition-colors"
+      className="bg-slate-100 dark:bg-white/5 backdrop-blur-lg border border-slate-200 dark:border-white/10 p-6 rounded-2xl relative group hover:border-slate-400 dark:hover:border-white/20 hover:z-50 transition-colors"
     >
       <div className="flex justify-between items-start mb-4">
-        <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shadow-sm relative z-10 group-hover:scale-110 transition-transform">
+        <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center shadow-sm relative z-10 group-hover:scale-110 transition-transform">
           {icon}
         </div>
         {trend !== undefined && (
           <div className={cn(
             "flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 rounded-full z-20 border relative",
-            trend > 0 ? "bg-green-500/10 text-green-400 border-green-500/20" : trend < 0 ? "bg-red-500/10 text-red-400 border-red-500/20" : "bg-white/5 text-slate-400 border-white/10"
+            trend > 0 ? "bg-green-500/10 text-green-400 border-green-500/20" : trend < 0 ? "bg-red-500/10 text-red-400 border-red-500/20" : "bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-white/10"
           )}>
             {trend > 0 ? <ArrowUpRight className="w-3.5 h-3.5" /> : trend < 0 ? <ArrowDownRight className="w-3.5 h-3.5" /> : null}
             <span className="flex items-center gap-1.5">
@@ -615,46 +679,48 @@ function KpiCard({ title, value, subtitle, icon, trend, trendTooltip }: { title:
         )}
       </div>
       <div className="relative z-10 block">
-        <p className="text-slate-400 text-sm font-medium mb-1 drop-shadow-sm">{title}</p>
-        <h3 className="text-3xl xl:text-4xl font-bold text-white mb-2">{value}</h3>
-        <p className="text-sm font-medium text-slate-400">{subtitle}</p>
+        <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1 drop-shadow-sm">{title}</p>
+        <h3 className="text-3xl xl:text-4xl font-bold text-slate-900 dark:text-white mb-2">{value}</h3>
+        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{subtitle}</p>
       </div>
     </motion.div>
   );
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label, platform }: any) => {
   if (active && payload && payload.length) {
     const rawData = payload[0].payload as DataRow;
     const formatNumber = (num: number) => new Intl.NumberFormat('vi-VN').format(num);
     
     return (
-      <div className="bg-slate-900/95 backdrop-blur-xl p-4 rounded-xl shadow-xl border border-white/10 w-64 ring-1 ring-white/5">
-        <p className="font-bold text-white mb-3 border-b border-white/10 pb-2 flex justify-between items-center">
+      <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl p-4 rounded-xl shadow-xl border border-slate-200 dark:border-white/10 w-64 ring-1 ring-slate-200 dark:ring-white/5">
+        <p className="font-bold text-slate-900 dark:text-white mb-3 border-b border-slate-200 dark:border-white/10 pb-2 flex justify-between items-center">
           <span className="text-[15px]">{format(new Date(rawData.timestamp), 'dd/MM/yyyy')}</span>
-          <span className="text-[11px] uppercase tracking-wider font-semibold text-slate-400 px-2 py-0.5 bg-white/5 rounded-md">
+          <span className="text-[11px] uppercase tracking-wider font-semibold text-slate-500 dark:text-slate-400 px-2 py-0.5 bg-slate-100 dark:bg-white/5 rounded-md">
             {format(new Date(rawData.timestamp), 'EEEE', { locale: vi })}
           </span>
         </p>
         <div className="space-y-3">
           {payload.map((entry: any, index: number) => (
             <div key={index} className="flex justify-between items-center text-sm">
-              <span className="flex items-center gap-2 text-slate-300 font-semibold tracking-wide">
+              <span className="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-semibold tracking-wide">
                 <span className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: entry.color }}></span>
                 {entry.name}
               </span>
-              <span className="font-black text-white text-base">{formatNumber(entry.value)}</span>
+              <span className="font-black text-slate-900 dark:text-white text-base">{formatNumber(entry.value)}</span>
             </div>
           ))}
-          <div className="mt-4 pt-3 border-t border-white/10 flex flex-col gap-1 text-sm">
-             <div className="flex justify-between items-center">
-                 <span className="text-slate-400 font-medium">Tỷ trọng mobile:</span>
-                 <span className="font-bold text-emerald-400">{((rawData.mobile / rawData.total) * 100).toFixed(1)}%</span>
-             </div>
-             <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden mt-1 flex justify-start">
-                 <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${(rawData.mobile / rawData.total) * 100}%` }}></div>
-             </div>
-          </div>
+          {platform === 'all' && (
+            <div className="mt-4 pt-3 border-t border-slate-200 dark:border-white/10 flex flex-col gap-1 text-sm">
+               <div className="flex justify-between items-center">
+                   <span className="text-slate-500 dark:text-slate-400 font-medium">Tỷ trọng mobile:</span>
+                   <span className="font-bold text-emerald-400">{((rawData.mobile / rawData.total) * 100).toFixed(1)}%</span>
+               </div>
+               <div className="w-full h-1.5 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden mt-1 flex justify-start">
+                   <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${(rawData.mobile / rawData.total) * 100}%` }}></div>
+               </div>
+            </div>
+          )}
         </div>
       </div>
     );

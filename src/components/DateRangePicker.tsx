@@ -139,10 +139,10 @@ export function DateRangePicker({ startDate, endDate, onChange, availableDates }
 
     return (
       <div className="flex-1 w-full sm:w-[260px]">
-        <div className="text-center font-bold mb-4 text-white capitalize">
+        <div className="text-center font-bold mb-4 text-slate-900 dark:text-white capitalize">
           {format(month, 'MMMM yyyy', { locale: vi })}
         </div>
-        <div className="grid grid-cols-7 gap-y-2 text-center text-[11px] text-slate-400 mb-2 font-semibold">
+        <div className="grid grid-cols-7 gap-y-2 text-center text-[11px] text-slate-500 dark:text-slate-400 mb-2 font-semibold">
           {['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'].map((d, i) => (
             <div key={i}>{d}</div>
           ))}
@@ -198,9 +198,9 @@ export function DateRangePicker({ startDate, endDate, onChange, availableDates }
 
                 <div className={cn(
                   "absolute w-8 h-8 rounded-full flex items-center justify-center z-10 transition-colors",
-                  (isStart || (tempEnd && isSameDay(day, tempEnd))) ? "bg-blue-600 text-white font-bold shadow-md shadow-blue-500/20" : "",
-                  (!isStart && !(tempEnd && isSameDay(day, tempEnd))) && hasData && !isBg ? "text-slate-200 cursor-pointer hover:border hover:border-white/20 hover:bg-white/5" : "",
-                  (!isStart && !(tempEnd && isSameDay(day, tempEnd))) && hasData && isBg ? "text-slate-200 cursor-pointer hover:font-bold" : "",
+                  (isStart || (tempEnd && isSameDay(day, tempEnd))) ? "bg-blue-600 text-slate-900 dark:text-white font-bold shadow-md shadow-blue-500/20" : "",
+                  (!isStart && !(tempEnd && isSameDay(day, tempEnd))) && hasData && !isBg ? "text-slate-800 dark:text-slate-200 cursor-pointer hover:border hover:border-slate-400 dark:hover:border-white/20 hover:bg-slate-100 dark:hover:bg-white/5" : "",
+                  (!isStart && !(tempEnd && isSameDay(day, tempEnd))) && hasData && isBg ? "text-slate-800 dark:text-slate-200 cursor-pointer hover:font-bold" : "",
                   (!hasData && "opacity-30 cursor-not-allowed text-slate-500")
                 )}>
                   {format(day, 'd')}
@@ -219,14 +219,14 @@ export function DateRangePicker({ startDate, endDate, onChange, availableDates }
     <div className="relative" ref={containerRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-4 py-2.5 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl text-sm transition-colors text-white"
+        className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-white/10 rounded-xl text-sm transition-colors text-slate-900 dark:text-white"
       >
         <CalendarIcon className="w-4 h-4 text-emerald-400" />
         <span className="font-medium whitespace-nowrap">
           {startDate ? format(startDate, 'dd MMM yyyy', { locale: vi }) : 'Tất cả thời gian'} 
           {startDate && endDate && !isSameDay(startDate, endDate) ? ` - ${format(endDate, 'dd MMM yyyy', { locale: vi })}` : ''}
         </span>
-        <ChevronDown className="w-4 h-4 text-slate-400 ml-2" />
+        <ChevronDown className="w-4 h-4 text-slate-500 dark:text-slate-400 ml-2" />
       </button>
 
       <AnimatePresence>
@@ -236,10 +236,10 @@ export function DateRangePicker({ startDate, endDate, onChange, availableDates }
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.98 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className="absolute top-full right-0 mt-2 z-50 flex flex-col md:flex-row bg-slate-900/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden ring-1 ring-white/5 origin-top-right w-[calc(100vw-2rem)] md:w-auto max-w-[800px]"
+            className="absolute top-full right-0 mt-2 z-50 flex flex-col md:flex-row bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden ring-1 ring-slate-200 dark:ring-white/5 origin-top-right w-[calc(100vw-2rem)] md:w-auto max-w-[800px]"
           >
             {/* Presets Sidebar */}
-            <div className="w-full md:w-48 bg-white/5 border-b md:border-b-0 md:border-r border-white/10 p-4 flex flex-row md:flex-col gap-1 overflow-x-auto">
+            <div className="w-full md:w-48 bg-slate-100 dark:bg-white/5 border-b md:border-b-0 md:border-r border-slate-200 dark:border-white/10 p-4 flex flex-row md:flex-col gap-1 overflow-x-auto">
               <div className="text-[10px] font-bold text-slate-500 mb-2 px-3 uppercase tracking-wider hidden md:block">Presets</div>
               {[
                 { label: 'Tất cả thời gian', id: 'all' },
@@ -255,7 +255,7 @@ export function DateRangePicker({ startDate, endDate, onChange, availableDates }
                 <button
                   key={preset.label}
                   onClick={() => applyPreset(preset.id)}
-                  className="px-3 py-2 text-sm text-left text-slate-300 hover:bg-white/10 hover:text-white rounded-lg whitespace-nowrap transition-colors"
+                  className="px-3 py-2 text-sm text-left text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white rounded-lg whitespace-nowrap transition-colors"
                 >
                   {preset.label}
                 </button>
@@ -265,16 +265,16 @@ export function DateRangePicker({ startDate, endDate, onChange, availableDates }
             {/* Main Date Picker Area */}
             <div className="p-4 md:p-6 flex flex-col">
               {/* Header Inputs */}
-              <div className="flex items-center justify-between mb-6 border-b border-white/10 pb-4">
+              <div className="flex items-center justify-between mb-6 border-b border-slate-200 dark:border-white/10 pb-4">
                 <div className="flex items-center gap-4">
-                  <div className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 min-w-[130px] text-center">
-                    <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">Ngày bắt đầu</div>
-                    <div className="font-semibold text-white">{tempStart ? format(tempStart, 'dd/MM/yyyy', { locale: vi }) : '--'}</div>
+                  <div className="bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-2 min-w-[130px] text-center">
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Ngày bắt đầu</div>
+                    <div className="font-semibold text-slate-900 dark:text-white">{tempStart ? format(tempStart, 'dd/MM/yyyy', { locale: vi }) : '--'}</div>
                   </div>
                   <span className="text-slate-500">-</span>
-                  <div className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 min-w-[130px] text-center">
-                    <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">Ngày kết thúc</div>
-                    <div className="font-semibold text-white">{tempEnd ? format(tempEnd, 'dd/MM/yyyy', { locale: vi }) : '--'}</div>
+                  <div className="bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-2 min-w-[130px] text-center">
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Ngày kết thúc</div>
+                    <div className="font-semibold text-slate-900 dark:text-white">{tempEnd ? format(tempEnd, 'dd/MM/yyyy', { locale: vi }) : '--'}</div>
                   </div>
                 </div>
                 <button onClick={handleClear} className="text-sm font-medium text-blue-400 hover:text-blue-300 transition-colors ml-6">
@@ -284,33 +284,33 @@ export function DateRangePicker({ startDate, endDate, onChange, availableDates }
 
               {/* Calendars */}
               <div className="flex flex-col sm:flex-row gap-8 relative items-start">
-                <button onClick={prevMonth} className="absolute left-[-16px] top-0 p-1 text-slate-400 hover:text-white rounded-full hover:bg-white/10 z-10 hidden sm:block">
+                <button onClick={prevMonth} className="absolute left-[-16px] top-0 p-1 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-full hover:bg-slate-200 dark:hover:bg-white/10 z-10 hidden sm:block">
                   <ChevronLeft className="w-5 h-5" />
                 </button>
                 <div className="sm:hidden flex justify-between w-full mb-4">
-                   <button onClick={prevMonth} className="p-1 text-slate-400 hover:text-white rounded-full hover:bg-white/10"><ChevronLeft className="w-5 h-5" /></button>
-                   <button onClick={nextMonth} className="p-1 text-slate-400 hover:text-white rounded-full hover:bg-white/10"><ChevronRight className="w-5 h-5" /></button>
+                   <button onClick={prevMonth} className="p-1 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-full hover:bg-slate-200 dark:hover:bg-white/10"><ChevronLeft className="w-5 h-5" /></button>
+                   <button onClick={nextMonth} className="p-1 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-full hover:bg-slate-200 dark:hover:bg-white/10"><ChevronRight className="w-5 h-5" /></button>
                 </div>
                 
                 {renderMonth(currentMonth)}
                 {renderMonth(rightMonth)}
 
-                <button onClick={nextMonth} className="absolute right-[-16px] top-0 p-1 text-slate-400 hover:text-white rounded-full hover:bg-white/10 z-10 hidden sm:block">
+                <button onClick={nextMonth} className="absolute right-[-16px] top-0 p-1 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-full hover:bg-slate-200 dark:hover:bg-white/10 z-10 hidden sm:block">
                   <ChevronRight className="w-5 h-5" />
                 </button>
               </div>
 
               {/* Footer Actions */}
-              <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-white/10">
+              <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-200 dark:border-white/10">
                 <button 
                   onClick={() => setIsOpen(false)}
-                  className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors"
                 >
                   Cancel
                 </button>
                 <button 
                   onClick={handleApply}
-                  className="px-5 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-500 text-white rounded-lg shadow-lg shadow-blue-500/20 transition-all"
+                  className="px-5 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-500 text-slate-900 dark:text-white rounded-lg shadow-lg shadow-blue-500/20 transition-all"
                 >
                   Apply
                 </button>
