@@ -14,6 +14,8 @@ interface DataRow {
   timestamp: number;
   mobile: number;
   pc: number;
+  pageviewsMobile: number;
+  pageviewsPC: number;
   pageviews: number;
   total: number;
 }
@@ -87,7 +89,9 @@ export default function App() {
           const dateStr = parts[0];
           const mobileStr = parts[1];
           const pcStr = parts[2];
-          const pvStr = parts[3] || '0';
+          const pvMobileStr = parts[3] || '0';
+          const pvPCStr = parts[4] || '0';
+          const pvTotalStr = parts[5] || '0';
           
           if (!dateStr || dateStr.toLowerCase().includes('day')) continue;
           
@@ -101,13 +105,17 @@ export default function App() {
           
           const mobile = parseVNNumber(mobileStr);
           const pc = parseVNNumber(pcStr);
-          const pageviews = parseVNNumber(pvStr);
+          const pageviewsMobile = parseVNNumber(pvMobileStr);
+          const pageviewsPC = parseVNNumber(pvPCStr);
+          const pageviews = parseVNNumber(pvTotalStr);
           
           parsedData.push({
             dateStr,
             timestamp: ms,
             mobile,
             pc,
+            pageviewsMobile,
+            pageviewsPC,
             pageviews,
             total: mobile + pc
           });
@@ -197,11 +205,15 @@ export default function App() {
     const totalMobile = data.reduce((acc, row) => acc + row.mobile, 0);
     const totalPC = data.reduce((acc, row) => acc + row.pc, 0);
     const totalPageviews = data.reduce((acc, row) => acc + row.pageviews, 0);
+    const totalPageviewsMobile = data.reduce((acc, row) => acc + row.pageviewsMobile, 0);
+    const totalPageviewsPC = data.reduce((acc, row) => acc + row.pageviewsPC, 0);
     
     const prevTotalClicks = previousData.reduce((acc, row) => acc + row.total, 0);
     const prevTotalMobile = previousData.reduce((acc, row) => acc + row.mobile, 0);
     const prevTotalPC = previousData.reduce((acc, row) => acc + row.pc, 0);
     const prevTotalPageviews = previousData.reduce((acc, row) => acc + row.pageviews, 0);
+    const prevTotalPageviewsMobile = previousData.reduce((acc, row) => acc + row.pageviewsMobile, 0);
+    const prevTotalPageviewsPC = previousData.reduce((acc, row) => acc + row.pageviewsPC, 0);
     
     let maxDay = data[0];
     for (const row of data) {
@@ -227,6 +239,8 @@ export default function App() {
       totalMobile,
       totalPC,
       totalPageviews,
+      totalPageviewsMobile,
+      totalPageviewsPC,
       latest,
       totalGrowth,
       mobileGrowth,
@@ -237,6 +251,8 @@ export default function App() {
       prevTotalMobile,
       prevTotalPC,
       prevTotalPageviews,
+      prevTotalPageviewsMobile,
+      prevTotalPageviewsPC,
       durationDays
     };
   }, [data, previousData]);
@@ -333,9 +349,9 @@ export default function App() {
   ] : [];
 
   const ctrPieData = stats ? [
-    { name: 'Click Mobile', value: stats.totalMobile, color: COLORS.mobile },
-    { name: 'Click PC', value: stats.totalPC, color: COLORS.pc },
-    { name: 'Không Click', value: Math.max(0, stats.totalPageviews - stats.totalClicks), color: '#64748b' },
+    { name: 'Click Mobile', value: stats.totalMobile, pageviews: stats.totalPageviewsMobile, color: COLORS.mobile },
+    { name: 'Click PC', value: stats.totalPC, pageviews: stats.totalPageviewsPC, color: COLORS.pc },
+    { name: 'Không Click', value: Math.max(0, stats.totalPageviews - stats.totalClicks), pageviews: stats.totalPageviews, color: '#64748b' },
   ] : [];
 
   return (
@@ -445,7 +461,7 @@ export default function App() {
             <KpiCard 
               title="Click Mobile"
               value={formatNumber(stats.totalMobile)}
-              subtitle={`CTR: ${((stats.totalMobile / stats.totalPageviews) * 100).toFixed(2)}%`}
+              subtitle={`CTR: ${((stats.totalMobile / stats.totalPageviewsMobile) * 100).toFixed(2)}%`}
               icon={<Smartphone className="w-5 h-5 text-emerald-400" />}
               trend={stats.mobileGrowth}
               trendTooltip={`Chênh lệch click trên mobile so với kỳ trước (${stats.durationDays} ngày liền kề)`}
@@ -453,7 +469,7 @@ export default function App() {
             <KpiCard 
               title="Click PC"
               value={formatNumber(stats.totalPC)}
-              subtitle={`CTR: ${((stats.totalPC / stats.totalPageviews) * 100).toFixed(2)}%`}
+              subtitle={`CTR: ${((stats.totalPC / stats.totalPageviewsPC) * 100).toFixed(2)}%`}
               icon={<Monitor className="w-5 h-5 text-blue-400" />}
               trend={stats.pcGrowth}
               trendTooltip={`Chênh lệch click trên PC so với kỳ trước (${stats.durationDays} ngày liền kề)`}
@@ -609,7 +625,7 @@ export default function App() {
                         <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: d.color }}></div>
                         <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{d.name}</span>
                       </div>
-                      <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">{((d.value / (stats?.totalPageviews || 1)) * 100).toFixed(2)}%</span>
+                      <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">{((d.value / (d.pageviews || 1)) * 100).toFixed(2)}%</span>
                     </div>
                   ))}
                 </div>
@@ -669,7 +685,7 @@ export default function App() {
               <thead className="bg-slate-200/50 dark:bg-[#1e293b]/50 text-slate-500 dark:text-slate-400 text-[13px]">
                 <tr className="border-b border-slate-200 dark:border-white/10">
                   <th className="px-6 py-4 font-semibold">Ngày</th>
-                  <th className="px-6 py-4 font-semibold text-right">Pageviews</th>
+                  <th className="px-6 py-4 font-semibold text-right">Pageviews {platform === 'all' ? 'Tổng' : platform === 'mobile' ? 'Mobile' : 'PC'}</th>
                   {(platform === 'all' || platform === 'mobile') && <th className="px-6 py-4 font-semibold text-right">Mobile</th>}
                   {(platform === 'all' || platform === 'pc') && <th className="px-6 py-4 font-semibold text-right">PC</th>}
                   {platform === 'all' && <th className="px-6 py-4 font-semibold text-right">Tổng click</th>}
@@ -698,7 +714,7 @@ export default function App() {
                       <div className="text-xs font-medium text-slate-500 dark:text-slate-400 capitalize">{format(new Date(row.timestamp), 'EEEE', { locale: vi })}</div>
                     </td>
                     <td className="px-6 py-4 text-right text-slate-900 dark:text-slate-100 font-medium">
-                      {formatNumber(row.pageviews)}
+                      {formatNumber(platform === 'all' ? row.pageviews : platform === 'mobile' ? row.pageviewsMobile : row.pageviewsPC)}
                     </td>
                     {(platform === 'all' || platform === 'mobile') && (
                       <td className="px-6 py-4 text-right">
@@ -718,9 +734,9 @@ export default function App() {
                     <td className="px-6 py-4 text-right">
                       <span className="font-bold text-slate-900 dark:text-slate-100">
                         {platform === 'mobile' 
-                          ? ((row.mobile / row.pageviews) * 100).toFixed(2) 
+                          ? ((row.mobile / row.pageviewsMobile) * 100).toFixed(2) 
                           : platform === 'pc' 
-                            ? ((row.pc / row.pageviews) * 100).toFixed(2)
+                            ? ((row.pc / row.pageviewsPC) * 100).toFixed(2)
                             : ((row.total / row.pageviews) * 100).toFixed(2)}%
                       </span>
                     </td>
@@ -795,9 +811,11 @@ const CustomTooltip = ({ active, payload, label, platform }: any) => {
           <div className="flex justify-between items-center text-sm">
             <span className="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-semibold tracking-wide">
               <span className="w-3 h-3 rounded-full shadow-sm bg-purple-400"></span>
-              Pageviews
+              Pageviews {platform === 'all' ? 'Tổng' : platform === 'mobile' ? 'Mobile' : 'PC'}
             </span>
-            <span className="font-black text-slate-900 dark:text-white text-base">{formatNumber(rawData.pageviews)}</span>
+            <span className="font-black text-slate-900 dark:text-white text-base">
+              {formatNumber(platform === 'all' ? rawData.pageviews : platform === 'mobile' ? rawData.pageviewsMobile : rawData.pageviewsPC)}
+            </span>
           </div>
           {payload.map((entry: any, index: number) => (
             <div key={index} className="flex justify-between items-center text-sm">
@@ -814,9 +832,9 @@ const CustomTooltip = ({ active, payload, label, platform }: any) => {
             </span>
             <span className="font-bold text-emerald-400">
               {platform === 'mobile' 
-                ? ((rawData.mobile / rawData.pageviews) * 100).toFixed(2) 
+                ? ((rawData.mobile / rawData.pageviewsMobile) * 100).toFixed(2) 
                 : platform === 'pc' 
-                  ? ((rawData.pc / rawData.pageviews) * 100).toFixed(2)
+                  ? ((rawData.pc / rawData.pageviewsPC) * 100).toFixed(2)
                   : ((rawData.total / rawData.pageviews) * 100).toFixed(2)}%
             </span>
           </div>
