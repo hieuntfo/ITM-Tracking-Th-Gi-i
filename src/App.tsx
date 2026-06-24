@@ -14,6 +14,7 @@ interface DataRow {
   timestamp: number;
   mobile: number;
   pc: number;
+  pageviews: number;
   total: number;
 }
 
@@ -86,6 +87,7 @@ export default function App() {
           const dateStr = parts[0];
           const mobileStr = parts[1];
           const pcStr = parts[2];
+          const pvStr = parts[3] || '0';
           
           if (!dateStr || dateStr.toLowerCase().includes('day')) continue;
           
@@ -94,12 +96,14 @@ export default function App() {
           
           const mobile = parseFloat(mobileStr.replace(',', '.')) || 0;
           const pc = parseFloat(pcStr.replace(',', '.')) || 0;
+          const pageviews = parseInt(pvStr.replace(/,/g, ''), 10) || 0;
           
           parsedData.push({
             dateStr,
             timestamp: ms,
             mobile: mobile * 1000,
             pc: pc * 1000,
+            pageviews: pageviews,
             total: (mobile + pc) * 1000
           });
         }
@@ -187,10 +191,12 @@ export default function App() {
     const totalClicks = data.reduce((acc, row) => acc + row.total, 0);
     const totalMobile = data.reduce((acc, row) => acc + row.mobile, 0);
     const totalPC = data.reduce((acc, row) => acc + row.pc, 0);
+    const totalPageviews = data.reduce((acc, row) => acc + row.pageviews, 0);
     
     const prevTotalClicks = previousData.reduce((acc, row) => acc + row.total, 0);
     const prevTotalMobile = previousData.reduce((acc, row) => acc + row.mobile, 0);
     const prevTotalPC = previousData.reduce((acc, row) => acc + row.pc, 0);
+    const prevTotalPageviews = previousData.reduce((acc, row) => acc + row.pageviews, 0);
     
     let maxDay = data[0];
     for (const row of data) {
@@ -205,6 +211,7 @@ export default function App() {
     const totalGrowth = previousData.length > 0 ? calculateGrowth(totalClicks, prevTotalClicks) : 0;
     const mobileGrowth = previousData.length > 0 ? calculateGrowth(totalMobile, prevTotalMobile) : 0;
     const pcGrowth = previousData.length > 0 ? calculateGrowth(totalPC, prevTotalPC) : 0;
+    const pageviewsGrowth = previousData.length > 0 ? calculateGrowth(totalPageviews, prevTotalPageviews) : 0;
 
     const earliestTimestamp = data[0].timestamp;
     const latestTimestamp = latest.timestamp;
@@ -214,14 +221,17 @@ export default function App() {
       totalClicks,
       totalMobile,
       totalPC,
+      totalPageviews,
       latest,
       totalGrowth,
       mobileGrowth,
       pcGrowth,
+      pageviewsGrowth,
       maxDay,
       prevTotalClicks,
       prevTotalMobile,
       prevTotalPC,
+      prevTotalPageviews,
       durationDays
     };
   }, [data, previousData]);
@@ -404,11 +414,19 @@ export default function App() {
         
         {/* KPI Cards */}
         {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+            <KpiCard 
+              title="Tổng Pageviews"
+              value={formatNumber(stats.totalPageviews)}
+              subtitle={`Cập nhật đến ${format(new Date(stats.latest!.timestamp), 'dd/MM/yyyy')}`}
+              icon={<Activity className="w-5 h-5 text-purple-400" />}
+              trend={stats.pageviewsGrowth}
+              trendTooltip={`Chênh lệch pageviews so với kỳ trước (${stats.durationDays} ngày liền kề)`}
+            />
             <KpiCard 
               title="Tổng lượt click (luỹ kế)"
               value={formatNumber(stats.totalClicks)}
-              subtitle={`Cập nhật đến ${format(new Date(stats.latest!.timestamp), 'dd/MM/yyyy')}`}
+              subtitle={`CTR: ${((stats.totalClicks / stats.totalPageviews) * 100).toFixed(2)}%`}
               icon={<BarChart3 className="w-5 h-5 text-emerald-400" />}
               trend={stats.totalGrowth}
               trendTooltip={`Chênh lệch so với kỳ trước (${stats.durationDays} ngày liền kề)`}
@@ -416,7 +434,7 @@ export default function App() {
             <KpiCard 
               title="Click mobile (luỹ kế)"
               value={formatNumber(stats.totalMobile)}
-              subtitle={`${((stats.totalMobile / stats.totalClicks) * 100).toFixed(1)}% tổng click`}
+              subtitle={`CTR: ${((stats.totalMobile / stats.totalPageviews) * 100).toFixed(2)}%`}
               icon={<Smartphone className="w-5 h-5 text-emerald-400" />}
               trend={stats.mobileGrowth}
               trendTooltip={`Chênh lệch click trên mobile so với kỳ trước (${stats.durationDays} ngày liền kề)`}
@@ -424,13 +442,13 @@ export default function App() {
             <KpiCard 
               title="Click PC (luỹ kế)"
               value={formatNumber(stats.totalPC)}
-              subtitle={`${((stats.totalPC / stats.totalClicks) * 100).toFixed(1)}% tổng click`}
+              subtitle={`CTR: ${((stats.totalPC / stats.totalPageviews) * 100).toFixed(2)}%`}
               icon={<Monitor className="w-5 h-5 text-blue-400" />}
               trend={stats.pcGrowth}
               trendTooltip={`Chênh lệch click trên PC so với kỳ trước (${stats.durationDays} ngày liền kề)`}
             />
             <KpiCard 
-              title="Ngày cao điểm nhất"
+              title="Ngày click cao nhất"
               value={formatNumber(stats.maxDay.total)}
               subtitle={format(new Date(stats.maxDay.timestamp), 'EEEE, dd/MM/yyyy', { locale: vi })}
               icon={<TrendingUp className="w-5 h-5 text-amber-400" />}
@@ -590,9 +608,11 @@ export default function App() {
               <thead className="bg-slate-200/50 dark:bg-[#1e293b]/50 text-slate-500 dark:text-slate-400 text-[13px]">
                 <tr className="border-b border-slate-200 dark:border-white/10">
                   <th className="px-6 py-4 font-semibold">Ngày</th>
+                  <th className="px-6 py-4 font-semibold text-right">Pageviews</th>
                   {(platform === 'all' || platform === 'mobile') && <th className="px-6 py-4 font-semibold text-right">Mobile</th>}
                   {(platform === 'all' || platform === 'pc') && <th className="px-6 py-4 font-semibold text-right">PC</th>}
                   {platform === 'all' && <th className="px-6 py-4 font-semibold text-right">Tổng click</th>}
+                  <th className="px-6 py-4 font-semibold text-right">CTR</th>
                   {platform === 'all' && (
                     <th className="px-6 py-4 font-semibold text-right">
                       <div className="flex items-center justify-end gap-2">
@@ -616,6 +636,9 @@ export default function App() {
                       <div className="font-bold text-slate-900 dark:text-white">{format(new Date(row.timestamp), 'dd/MM/yyyy')}</div>
                       <div className="text-xs font-medium text-slate-500 dark:text-slate-400 capitalize">{format(new Date(row.timestamp), 'EEEE', { locale: vi })}</div>
                     </td>
+                    <td className="px-6 py-4 text-right text-slate-900 dark:text-slate-100 font-medium">
+                      {formatNumber(row.pageviews)}
+                    </td>
                     {(platform === 'all' || platform === 'mobile') && (
                       <td className="px-6 py-4 text-right">
                         <span className="font-mono text-emerald-400">{formatNumber(row.mobile)}</span>
@@ -631,6 +654,15 @@ export default function App() {
                         {formatNumber(row.total)}
                       </td>
                     )}
+                    <td className="px-6 py-4 text-right">
+                      <span className="font-bold text-slate-900 dark:text-slate-100">
+                        {platform === 'mobile' 
+                          ? ((row.mobile / row.pageviews) * 100).toFixed(2) 
+                          : platform === 'pc' 
+                            ? ((row.pc / row.pageviews) * 100).toFixed(2)
+                            : ((row.total / row.pageviews) * 100).toFixed(2)}%
+                      </span>
+                    </td>
                     {platform === 'all' && (
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-3">
@@ -701,6 +733,13 @@ const CustomTooltip = ({ active, payload, label, platform }: any) => {
           </span>
         </p>
         <div className="space-y-3">
+          <div className="flex justify-between items-center text-sm">
+            <span className="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-semibold tracking-wide">
+              <span className="w-3 h-3 rounded-full shadow-sm bg-purple-400"></span>
+              Pageviews
+            </span>
+            <span className="font-black text-slate-900 dark:text-white text-base">{formatNumber(rawData.pageviews)}</span>
+          </div>
           {payload.map((entry: any, index: number) => (
             <div key={index} className="flex justify-between items-center text-sm">
               <span className="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-semibold tracking-wide">
@@ -710,6 +749,18 @@ const CustomTooltip = ({ active, payload, label, platform }: any) => {
               <span className="font-black text-slate-900 dark:text-white text-base">{formatNumber(entry.value)}</span>
             </div>
           ))}
+          <div className="flex justify-between items-center text-sm pt-2 border-t border-slate-200 dark:border-white/10">
+            <span className="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-semibold tracking-wide">
+              CTR {platform === 'all' ? 'Tổng' : platform === 'mobile' ? 'Mobile' : 'PC'}
+            </span>
+            <span className="font-bold text-emerald-400">
+              {platform === 'mobile' 
+                ? ((rawData.mobile / rawData.pageviews) * 100).toFixed(2) 
+                : platform === 'pc' 
+                  ? ((rawData.pc / rawData.pageviews) * 100).toFixed(2)
+                  : ((rawData.total / rawData.pageviews) * 100).toFixed(2)}%
+            </span>
+          </div>
           {platform === 'all' && (
             <div className="mt-4 pt-3 border-t border-slate-200 dark:border-white/10 flex flex-col gap-1 text-sm">
                <div className="flex justify-between items-center">
@@ -725,5 +776,6 @@ const CustomTooltip = ({ active, payload, label, platform }: any) => {
       </div>
     );
   }
+
   return null;
 };
