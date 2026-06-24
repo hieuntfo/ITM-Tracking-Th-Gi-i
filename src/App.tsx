@@ -94,17 +94,22 @@ export default function App() {
           const ms = new Date(dateStr).getTime();
           if (isNaN(ms)) continue;
           
-          const mobile = parseFloat(mobileStr.replace(',', '.')) || 0;
-          const pc = parseFloat(pcStr.replace(',', '.')) || 0;
-          const pageviews = parseInt(pvStr.replace(/,/g, ''), 10) || 0;
+          const parseVNNumber = (str: string) => {
+            if (!str) return 0;
+            return parseFloat(str.replace(/\./g, '').replace(/,/g, '.')) || 0;
+          };
+          
+          const mobile = parseVNNumber(mobileStr);
+          const pc = parseVNNumber(pcStr);
+          const pageviews = parseVNNumber(pvStr);
           
           parsedData.push({
             dateStr,
             timestamp: ms,
-            mobile: mobile * 1000,
-            pc: pc * 1000,
-            pageviews: pageviews,
-            total: (mobile + pc) * 1000
+            mobile,
+            pc,
+            pageviews,
+            total: mobile + pc
           });
         }
       }
