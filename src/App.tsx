@@ -327,6 +327,12 @@ export default function App() {
     { name: 'PC', value: stats.totalPC, color: COLORS.pc },
   ] : [];
 
+  const ctrPieData = stats ? [
+    { name: 'Click Mobile', value: stats.totalMobile, color: COLORS.mobile },
+    { name: 'Click PC', value: stats.totalPC, color: COLORS.pc },
+    { name: 'Không Click', value: Math.max(0, stats.totalPageviews - stats.totalClicks), color: '#64748b' },
+  ] : [];
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans pb-12 relative overflow-hidden flex flex-col">
       {/* Mesh Background Layer */}
@@ -414,7 +420,7 @@ export default function App() {
         
         {/* KPI Cards */}
         {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 lg:gap-6">
             <KpiCard 
               title="Tổng Pageviews"
               value={formatNumber(stats.totalPageviews)}
@@ -424,7 +430,7 @@ export default function App() {
               trendTooltip={`Chênh lệch pageviews so với kỳ trước (${stats.durationDays} ngày liền kề)`}
             />
             <KpiCard 
-              title="Tổng lượt click (luỹ kế)"
+              title="Tổng Lượt Click"
               value={formatNumber(stats.totalClicks)}
               subtitle={`CTR: ${((stats.totalClicks / stats.totalPageviews) * 100).toFixed(2)}%`}
               icon={<BarChart3 className="w-5 h-5 text-emerald-400" />}
@@ -432,7 +438,7 @@ export default function App() {
               trendTooltip={`Chênh lệch so với kỳ trước (${stats.durationDays} ngày liền kề)`}
             />
             <KpiCard 
-              title="Click mobile (luỹ kế)"
+              title="Click Mobile"
               value={formatNumber(stats.totalMobile)}
               subtitle={`CTR: ${((stats.totalMobile / stats.totalPageviews) * 100).toFixed(2)}%`}
               icon={<Smartphone className="w-5 h-5 text-emerald-400" />}
@@ -440,7 +446,7 @@ export default function App() {
               trendTooltip={`Chênh lệch click trên mobile so với kỳ trước (${stats.durationDays} ngày liền kề)`}
             />
             <KpiCard 
-              title="Click PC (luỹ kế)"
+              title="Click PC"
               value={formatNumber(stats.totalPC)}
               subtitle={`CTR: ${((stats.totalPC / stats.totalPageviews) * 100).toFixed(2)}%`}
               icon={<Monitor className="w-5 h-5 text-blue-400" />}
@@ -448,18 +454,18 @@ export default function App() {
               trendTooltip={`Chênh lệch click trên PC so với kỳ trước (${stats.durationDays} ngày liền kề)`}
             />
             <KpiCard 
-              title="Ngày click cao nhất"
+              title="Ngày Đỉnh Kỷ Lục"
               value={formatNumber(stats.maxDay.total)}
-              subtitle={format(new Date(stats.maxDay.timestamp), 'EEEE, dd/MM/yyyy', { locale: vi })}
+              subtitle={format(new Date(stats.maxDay.timestamp), 'dd/MM/yyyy', { locale: vi })}
               icon={<TrendingUp className="w-5 h-5 text-amber-400" />}
             />
           </div>
         )}
 
         {/* Charts Row */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className={cn("grid gap-6", platform === 'all' ? "grid-cols-1 xl:grid-cols-4" : "grid-cols-1")}>
           {/* Main Trend Chart */}
-          <section className={cn("bg-slate-100 dark:bg-white/5 backdrop-blur-lg border border-slate-200 dark:border-white/10 rounded-2xl p-6 flex flex-col", platform === 'all' ? "xl:col-span-2" : "xl:col-span-3")}>
+          <section className={cn("bg-slate-100 dark:bg-white/5 backdrop-blur-lg border border-slate-200 dark:border-white/10 rounded-2xl p-6 flex flex-col", platform === 'all' ? "xl:col-span-2" : "xl:col-span-1")}>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
               <div>
                 <h2 className="text-lg font-bold flex items-center gap-2 text-slate-900 dark:text-white">
@@ -508,7 +514,8 @@ export default function App() {
 
           {/* Allocation Pie Chart */}
           {platform === 'all' && (
-            <section className="bg-slate-100 dark:bg-white/5 backdrop-blur-lg border border-slate-200 dark:border-white/10 rounded-2xl p-6 flex flex-col z-10 hover:z-50 transition-all">
+            <>
+            <section className="bg-slate-100 dark:bg-white/5 backdrop-blur-lg border border-slate-200 dark:border-white/10 rounded-2xl p-6 flex flex-col z-10 hover:z-50 transition-all xl:col-span-1">
               <div>
                 <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   Tỷ trọng nền tảng
@@ -555,6 +562,55 @@ export default function App() {
                 </div>
               </div>
             </section>
+            
+            <section className="bg-slate-100 dark:bg-white/5 backdrop-blur-lg border border-slate-200 dark:border-white/10 rounded-2xl p-6 flex flex-col z-10 hover:z-50 transition-all xl:col-span-1">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  Tỷ lệ Click / Pageviews
+                  <InfoTooltip content="Thể hiện tỷ trọng lượt click trên tổng số pageviews phát sinh trong thời gian chọn." />
+                </h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 font-medium">CTR Tổng và theo Nền tảng</p>
+              </div>
+              
+              <div className="flex-1 flex flex-col items-center justify-center min-h-[300px]">
+                <ResponsiveContainer width="100%" height={250}>
+                  <PieChart>
+                    <Pie
+                      data={ctrPieData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={70}
+                      outerRadius={100}
+                      paddingAngle={5}
+                      dataKey="value"
+                      stroke="none"
+                    >
+                      {ctrPieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip 
+                      formatter={(value: number) => formatNumber(value)}
+                      contentStyle={{ borderRadius: '12px', background: 'rgba(15, 23, 42, 0.95)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', backdropFilter: 'blur(12px)', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.3)', fontWeight: 'bold' }}
+                      itemStyle={{ color: 'white' }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                
+                <div className="flex justify-center gap-4 w-full mt-2 flex-wrap">
+                  {ctrPieData.filter(d => d.name !== 'Không Click').map((d) => (
+                    <div key={d.name} className="flex flex-col items-center p-3 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 min-w-[100px]">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: d.color }}></div>
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{d.name}</span>
+                      </div>
+                      <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">{((d.value / (stats?.totalPageviews || 1)) * 100).toFixed(2)}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+            </>
           )}
         </div>
 
@@ -699,21 +755,19 @@ function KpiCard({ title, value, subtitle, icon, trend, trendTooltip }: { title:
         </div>
         {trend !== undefined && (
           <div className={cn(
-            "flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 rounded-full z-20 border relative",
+            "flex items-center gap-1.5 text-xs font-bold px-2 py-1 rounded-full z-20 border relative whitespace-nowrap",
             trend > 0 ? "bg-green-500/10 text-green-400 border-green-500/20" : trend < 0 ? "bg-red-500/10 text-red-400 border-red-500/20" : "bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-white/10"
           )}>
-            {trend > 0 ? <ArrowUpRight className="w-3.5 h-3.5" /> : trend < 0 ? <ArrowDownRight className="w-3.5 h-3.5" /> : null}
-            <span className="flex items-center gap-1.5">
-              {Math.abs(trend).toFixed(1)}% <span className="font-medium opacity-80">(So với kỳ trước)</span>
-              {trendTooltip && <InfoTooltip content={trendTooltip} />}
-            </span>
+            {trend > 0 ? <ArrowUpRight className="w-3.5 h-3.5 shrink-0" /> : trend < 0 ? <ArrowDownRight className="w-3.5 h-3.5 shrink-0" /> : null}
+            <span>{Math.abs(trend).toFixed(1)}%</span>
+            {trendTooltip && <div className="ml-0.5"><InfoTooltip content={trendTooltip} /></div>}
           </div>
         )}
       </div>
-      <div className="relative z-10 block">
-        <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1 drop-shadow-sm">{title}</p>
-        <h3 className="text-3xl xl:text-4xl font-bold text-slate-900 dark:text-white mb-2">{value}</h3>
-        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{subtitle}</p>
+      <div className="relative z-10 block mt-2">
+        <p className="text-slate-500 dark:text-slate-400 text-sm font-semibold mb-1.5 drop-shadow-sm line-clamp-1">{title}</p>
+        <h3 className="text-2xl 2xl:text-3xl font-black text-slate-900 dark:text-white mb-2 tracking-tight truncate" title={value}>{value}</h3>
+        <p className="text-xs font-medium text-slate-500 dark:text-slate-400 line-clamp-1">{subtitle}</p>
       </div>
     </motion.div>
   );
