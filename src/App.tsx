@@ -348,12 +348,6 @@ export default function App() {
     { name: 'PC', value: stats.totalPC, color: COLORS.pc },
   ] : [];
 
-  const ctrPieData = stats ? [
-    { name: 'Click Mobile', value: stats.totalMobile, pageviews: stats.totalPageviewsMobile, color: COLORS.mobile },
-    { name: 'Click PC', value: stats.totalPC, pageviews: stats.totalPageviewsPC, color: COLORS.pc },
-    { name: 'Không Click', value: Math.max(0, stats.totalPageviews - stats.totalClicks), pageviews: stats.totalPageviews, color: '#64748b' },
-  ] : [];
-
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans pb-12 relative overflow-hidden flex flex-col">
       {/* Mesh Background Layer */}
@@ -453,7 +447,7 @@ export default function App() {
             <KpiCard 
               title="Tổng Lượt Click"
               value={formatNumber(stats.totalClicks)}
-              subtitle={`CTR: ${((stats.totalClicks / stats.totalPageviews) * 100).toFixed(2)}%`}
+              subtitle={`CTR: ${((stats.totalClicks / (stats.totalPageviews || 1)) * 100).toFixed(2)}%`}
               icon={<BarChart3 className="w-5 h-5 text-emerald-400" />}
               trend={stats.totalGrowth}
               trendTooltip={`Chênh lệch so với kỳ trước (${stats.durationDays} ngày liền kề)`}
@@ -461,7 +455,7 @@ export default function App() {
             <KpiCard 
               title="Click Mobile"
               value={formatNumber(stats.totalMobile)}
-              subtitle={`CTR: ${((stats.totalMobile / stats.totalPageviewsMobile) * 100).toFixed(2)}%`}
+              subtitle={`CTR: ${((stats.totalMobile / (stats.totalPageviewsMobile || 1)) * 100).toFixed(2)}%`}
               icon={<Smartphone className="w-5 h-5 text-emerald-400" />}
               trend={stats.mobileGrowth}
               trendTooltip={`Chênh lệch click trên mobile so với kỳ trước (${stats.durationDays} ngày liền kề)`}
@@ -469,7 +463,7 @@ export default function App() {
             <KpiCard 
               title="Click PC"
               value={formatNumber(stats.totalPC)}
-              subtitle={`CTR: ${((stats.totalPC / stats.totalPageviewsPC) * 100).toFixed(2)}%`}
+              subtitle={`CTR: ${((stats.totalPC / (stats.totalPageviewsPC || 1)) * 100).toFixed(2)}%`}
               icon={<Monitor className="w-5 h-5 text-blue-400" />}
               trend={stats.pcGrowth}
               trendTooltip={`Chênh lệch click trên PC so với kỳ trước (${stats.durationDays} ngày liền kề)`}
@@ -534,7 +528,7 @@ export default function App() {
           </section>
 
           {/* Allocation Pie Chart */}
-          {platform === 'all' && (
+          {platform === 'all' && stats && (
             <>
             <section className="bg-slate-100 dark:bg-white/5 backdrop-blur-lg border border-slate-200 dark:border-white/10 rounded-2xl p-6 flex flex-col z-10 hover:z-50 transition-all xl:col-span-1">
               <div>
@@ -587,47 +581,74 @@ export default function App() {
             <section className="bg-slate-100 dark:bg-white/5 backdrop-blur-lg border border-slate-200 dark:border-white/10 rounded-2xl p-6 flex flex-col z-10 hover:z-50 transition-all xl:col-span-1">
               <div>
                 <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  Tỷ lệ Click / Pageviews
-                  <InfoTooltip content="Thể hiện tỷ trọng lượt click trên tổng số pageviews phát sinh trong thời gian chọn." />
+                  Tỷ lệ Click (CTR)
+                  <InfoTooltip content="Tỷ lệ click tính riêng trên số pageviews của từng nền tảng tương ứng." />
                 </h2>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 font-medium">CTR Tổng và theo Nền tảng</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 font-medium">CTR chi tiết theo Nền tảng</p>
               </div>
               
-              <div className="flex-1 flex flex-col items-center justify-center min-h-[300px]">
-                <ResponsiveContainer width="100%" height={250}>
-                  <PieChart>
-                    <Pie
-                      data={ctrPieData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={70}
-                      outerRadius={100}
-                      paddingAngle={5}
-                      dataKey="value"
-                      stroke="none"
-                    >
-                      {ctrPieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <RechartsTooltip 
-                      formatter={(value: number) => formatNumber(value)}
-                      contentStyle={{ borderRadius: '12px', background: 'rgba(15, 23, 42, 0.95)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', backdropFilter: 'blur(12px)', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.3)', fontWeight: 'bold' }}
-                      itemStyle={{ color: 'white' }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-                
-                <div className="flex justify-center gap-4 w-full mt-2 flex-wrap">
-                  {ctrPieData.filter(d => d.name !== 'Không Click').map((d) => (
-                    <div key={d.name} className="flex flex-col items-center p-3 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 min-w-[100px]">
-                      <div className="flex items-center gap-2 mb-1">
-                        <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: d.color }}></div>
-                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{d.name}</span>
+              <div className="flex-1 flex flex-col justify-center gap-8">
+                {/* Tổng CTR */}
+                <div>
+                  <div className="flex justify-between items-end mb-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-white/10 flex items-center justify-center shadow-sm">
+                        <Activity className="w-5 h-5 text-slate-700 dark:text-slate-300" />
                       </div>
-                      <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">{((d.value / (d.pageviews || 1)) * 100).toFixed(2)}%</span>
+                      <div>
+                        <div className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-0.5">Tổng CTR</div>
+                        <div className="text-xs font-medium text-slate-500">{formatNumber(stats.totalClicks)} / {formatNumber(stats.totalPageviews)} PV</div>
+                      </div>
                     </div>
-                  ))}
+                    <div className="text-2xl font-black text-slate-800 dark:text-white">
+                      {((stats.totalClicks / (stats.totalPageviews || 1)) * 100).toFixed(2)}%
+                    </div>
+                  </div>
+                  <div className="w-full h-3 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden shadow-inner">
+                    <div className="h-full bg-slate-600 dark:bg-slate-400 rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, (stats.totalClicks / (stats.totalPageviews || 1)) * 100)}%` }}></div>
+                  </div>
+                </div>
+
+                {/* Mobile CTR */}
+                <div>
+                  <div className="flex justify-between items-end mb-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 shadow-sm">
+                        <Smartphone className="w-5 h-5 text-emerald-500" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-0.5">Mobile CTR</div>
+                        <div className="text-xs font-medium text-slate-500">{formatNumber(stats.totalMobile)} / {formatNumber(stats.totalPageviewsMobile)} PV</div>
+                      </div>
+                    </div>
+                    <div className="text-2xl font-black text-emerald-500">
+                      {((stats.totalMobile / (stats.totalPageviewsMobile || 1)) * 100).toFixed(2)}%
+                    </div>
+                  </div>
+                  <div className="w-full h-3 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden shadow-inner">
+                    <div className="h-full bg-emerald-500 rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, (stats.totalMobile / (stats.totalPageviewsMobile || 1)) * 100)}%` }}></div>
+                  </div>
+                </div>
+
+                {/* PC CTR */}
+                <div>
+                  <div className="flex justify-between items-end mb-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 shadow-sm">
+                        <Monitor className="w-5 h-5 text-blue-500" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-0.5">PC CTR</div>
+                        <div className="text-xs font-medium text-slate-500">{formatNumber(stats.totalPC)} / {formatNumber(stats.totalPageviewsPC)} PV</div>
+                      </div>
+                    </div>
+                    <div className="text-2xl font-black text-blue-500">
+                      {((stats.totalPC / (stats.totalPageviewsPC || 1)) * 100).toFixed(2)}%
+                    </div>
+                  </div>
+                  <div className="w-full h-3 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden shadow-inner">
+                    <div className="h-full bg-blue-500 rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, (stats.totalPC / (stats.totalPageviewsPC || 1)) * 100)}%` }}></div>
+                  </div>
                 </div>
               </div>
             </section>
@@ -734,10 +755,10 @@ export default function App() {
                     <td className="px-6 py-4 text-right">
                       <span className="font-bold text-slate-900 dark:text-slate-100">
                         {platform === 'mobile' 
-                          ? ((row.mobile / row.pageviewsMobile) * 100).toFixed(2) 
+                          ? ((row.mobile / (row.pageviewsMobile || 1)) * 100).toFixed(2) 
                           : platform === 'pc' 
-                            ? ((row.pc / row.pageviewsPC) * 100).toFixed(2)
-                            : ((row.total / row.pageviews) * 100).toFixed(2)}%
+                            ? ((row.pc / (row.pageviewsPC || 1)) * 100).toFixed(2)
+                            : ((row.total / (row.pageviews || 1)) * 100).toFixed(2)}%
                       </span>
                     </td>
                     {platform === 'all' && (
@@ -832,10 +853,10 @@ const CustomTooltip = ({ active, payload, label, platform }: any) => {
             </span>
             <span className="font-bold text-emerald-400">
               {platform === 'mobile' 
-                ? ((rawData.mobile / rawData.pageviewsMobile) * 100).toFixed(2) 
+                ? ((rawData.mobile / (rawData.pageviewsMobile || 1)) * 100).toFixed(2) 
                 : platform === 'pc' 
-                  ? ((rawData.pc / rawData.pageviewsPC) * 100).toFixed(2)
-                  : ((rawData.total / rawData.pageviews) * 100).toFixed(2)}%
+                  ? ((rawData.pc / (rawData.pageviewsPC || 1)) * 100).toFixed(2)
+                  : ((rawData.total / (rawData.pageviews || 1)) * 100).toFixed(2)}%
             </span>
           </div>
           {platform === 'all' && (
